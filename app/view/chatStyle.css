@@ -1,0 +1,39 @@
+.chat-container {
+    max-width: 800px;
+    margin: 150px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #8C8B88;
+}
+
+.chat-messages {
+    height: 400px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #BFBBB4;
+}
+
+.chat-input {
+    margin-top: 20px;
+}
+
+.form-control {
+    background-color: #BFBBB4;
+}
+
+.btn {
+    background-color: #8C8B88;
+    color: #F2EDE4;
+    border: #8C8B88;
+}
+
+body {
+    background-color: #F2EDE4;
+}
+
+#formContent {
+    margin-top: 200px;
+}

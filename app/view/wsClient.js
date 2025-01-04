@@ -1,5 +1,5 @@
 // WebSocket接続を作成
-const socket = new WebSocket("ws://fargate-alb-1624172505.ap-northeast-1.elb.amazonaws.com/ws");
+const socket = new WebSocket("ws://localhost:8080/ws");
 
 socket.onopen = () => {
     console.log("WebSocket connection established");

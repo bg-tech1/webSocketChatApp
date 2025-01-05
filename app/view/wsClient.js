@@ -1,3 +1,10 @@
+//DOMイベント
+document.addEventListener("DOMContentLoaded", () => {
+    // ユーザー名を取得
+    const username = new URLSearchParams(window.location.search).get("username");
+    document.getElementById("usernameContainer").innerHTML = `こんにちは<br>${username}さん`;
+});
+
 // WebSocket接続を作成
 const socket = new WebSocket("ws://localhost:8080/ws");
 

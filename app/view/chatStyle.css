@@ -16,6 +16,11 @@
     background-color: #BFBBB4;
 }
 
+#usernameContainer {
+    color: aqua;
+    font-size: 12px;
+}
+
 .chat-input {
     margin-top: 20px;
 }

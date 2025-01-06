@@ -1,8 +1,13 @@
-//DOMイベント
+// DOMイベント
 document.addEventListener("DOMContentLoaded", () => {
     // ユーザー名を取得
     const username = new URLSearchParams(window.location.search).get("username");
-    document.getElementById("usernameContainer").innerHTML = `こんにちは<br>${username}さん`;
+    const usernameContainer = document.getElementById("usernameContainer");
+    if (usernameContainer) {
+        usernameContainer.innerHTML = `こんにちは<br>${username}さん`;
+    } else {
+        console.error("usernameContainer element not found");
+    }
 });
 
 // WebSocket接続を作成

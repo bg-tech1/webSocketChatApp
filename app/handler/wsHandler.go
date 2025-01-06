@@ -103,7 +103,7 @@ func HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 func HandleChatPage(w http.ResponseWriter, r *http.Request) {
 	//アクセストークンの認証
 	if !dbManager.IsAccessTokenValid(r.URL.Query().Get("access_token")) {
-		http.Redirect(w, r, "/badrequest/", http.StatusSeeOther)
+		http.Redirect(w, r, "/unauthorized/", http.StatusSeeOther)
 	}
 	renderTemplate(w, "chat", nil)
 }

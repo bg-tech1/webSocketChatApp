@@ -2,14 +2,11 @@ package main
 
 import (
 	"log"
-	"messageApp/app/db"
 	"messageApp/app/handler"
 	"net/http"
 )
 
 func main() {
-	// データベースの初期化
-	db.InitDatabase()
 
 	// ルートとハンドラのマッピング
 	routes := map[string]http.HandlerFunc{

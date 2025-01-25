@@ -3,7 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"log"
-	"messageApp/app/db"
+	"messageApp/app/domain"
+	"messageApp/app/usecase"
 	"net/http"
 	"text/template"
 
@@ -18,31 +19,11 @@ var (
 	Users = make(map[User]bool)
 	// メッセージをブロードキャストするためのチャネル
 	broadcast = make(chan []byte)
-	// データベースマネージャ
-	dbManager *db.DatabaseManager
+	uc        = usecase.NewUserUsecase()
 )
-
-type Response struct {
-	StatusCode int    `json:"status_code"`
-	Message    string `json:"message"`
-	AcessToken string `json:"access_token"`
-}
-
-type UserInfo struct {
-	Username string `json:"username"`
-	Password string `json:"pass"`
-}
 
 type User struct {
 	client *websocket.Conn
-}
-
-func init() {
-	var err error
-	dbManager, err = db.NewDatabaseManager()
-	if err != nil {
-		log.Fatalf("Failed to create DatabaseManager: %v", err)
-	}
 }
 
 func MakeHandler(title string) func(w http.ResponseWriter, r *http.Request) {
@@ -102,68 +83,74 @@ func HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func HandleChatPage(w http.ResponseWriter, r *http.Request) {
 	//アクセストークンの認証
-	if !dbManager.IsAccessTokenValid(r.URL.Query().Get("access_token")) {
+	if !uc.IsAccessTokenValid(r.URL.Query().Get("accessToken")) {
 		http.Redirect(w, r, "/unauthorized/", http.StatusSeeOther)
 	}
 	renderTemplate(w, "chat", nil)
 }
 
 func HandleRegisterUser(w http.ResponseWriter, r *http.Request) {
-	var userInfo UserInfo
+	var userInfo domain.UserInfo
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{
+		json.NewEncoder(w).Encode(domain.Response{
 			StatusCode: http.StatusBadRequest,
 			Message:    "Invalid request format",
 		})
 	}
 	username := userInfo.Username
 	password := userInfo.Password
-	dbManager.RegisterUser(username, password)
+	err := uc.RegisterUser(username, password)
+	if err != nil {
+		log.Println("Cannot register user", err)
+	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(Response{
-		StatusCode: http.StatusCreated,
-		Message:    "User created",
-		AcessToken: dbManager.SelectAccessToken(username, password),
+	json.NewEncoder(w).Encode(domain.Response{
+		StatusCode:  http.StatusCreated,
+		Message:     "User created",
+		AccessToken: uc.SelectAccessToken(username, password),
 	})
 }
 
 func HandleAuth(w http.ResponseWriter, r *http.Request) {
-	var userInfo UserInfo
+	var userInfo domain.UserInfo
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{
+		json.NewEncoder(w).Encode(domain.Response{
 			StatusCode: http.StatusBadRequest,
 			Message:    "Invalid request format",
 		})
 	}
 	username := userInfo.Username
 	password := userInfo.Password
+	log.Println("username:", username)
+	log.Println("password:", password)
 	// ユーザーの認証
-	result := dbManager.AuthenticateUser(username, password)
+	result := uc.AuthenticateUser(username, password)
 	if result {
 		// チャット接続用アクセストークンの取得
-		token := dbManager.SelectAccessToken(username, password)
+		token := uc.SelectAccessToken(username, password)
+		log.Println("token:", token)
 		if token != "" {
-			json.NewEncoder(w).Encode(Response{
-				StatusCode: http.StatusOK,
-				Message:    "User registered",
-				AcessToken: token,
+			json.NewEncoder(w).Encode(domain.Response{
+				StatusCode:  http.StatusOK,
+				Message:     "User registered",
+				AccessToken: token,
 			})
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{
+			json.NewEncoder(w).Encode(domain.Response{
 				StatusCode: http.StatusInternalServerError,
 				Message:    "Internal server error",
 			})
 		}
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(Response{
+		json.NewEncoder(w).Encode(domain.Response{
 			StatusCode: http.StatusUnauthorized,
 			Message:    "User not registered",
 		})
